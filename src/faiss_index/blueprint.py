@@ -5,11 +5,13 @@ from faiss_index import FaissIndex
 
 blueprint = Blueprint('faiss_index', __name__)
 
+
 @blueprint.record_once
 def record(setup_state):
     blueprint.faiss_index = FaissIndex(
         setup_state.app.config.get('INDEX_PATH'),
         setup_state.app.config.get('IDS_VECTORS_PATH'))
+
 
 @blueprint.route('/faiss/search', methods=['POST'])
 def search():
@@ -19,8 +21,8 @@ def search():
             'type': 'object',
             'required': ['k'],
             'properties': {
-                'k': { 'type': 'integer', 'minimum': 1 },
-                'ids': { 'type': 'array', 'items': { 'type': 'number' }},
+                'k': {'type': 'integer', 'minimum': 1},
+                'ids': {'type': 'array', 'items': {'type': 'number'}},
                 'vectors': {
                     'type': 'array',
                     'items': {

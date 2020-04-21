@@ -1,11 +1,12 @@
 import faiss
 import numpy as np
 
+
 class FaissIndex(object):
 
     def __init__(self, index_path, ids_vectors_path):
-        assert(index_path)
-        assert(ids_vectors_path)
+        assert index_path
+        assert ids_vectors_path
 
         import pickle
         with open(ids_vectors_path, 'rb') as f:
@@ -33,22 +34,30 @@ class FaissIndex(object):
         return results
 
     def __search__(self, ids, vectors, k):
-        def neighbor_dict(id_, score):
-            return { 'id': long(id_), 'score': float(score) }
+        def neighbor_dict(vector_id, score):
+            return {'id': int(vector_id), 'score': float(score)}
 
-        def result_dict(id_, vector, neighbors):
-            return { 'id': id_, 'vector': vector.tolist(), 'neighbors': neighbors }
+        def result_dict(vector_id, vector, nbrs):
+            return {
+                'id': vector_id,
+                'vector': vector.tolist(),
+                'neighbors': nbrs
+            }
 
         results = []
 
         vectors = [np.array(vector, dtype=np.float32) for vector in vectors]
         vectors = np.atleast_2d(vectors)
 
-        scores, neighbors = self.index.search(vectors, k) if vectors.size > 0 else ([], [])
-        for id_, vector, neighbors, scores in zip(ids, vectors, neighbors, scores):
+        scores_all, neighbors_all = self.index.search(vectors, k) \
+            if vectors.size > 0 else ([], [])
+        for id_, vector, neighbors, scores in zip(ids, vectors,
+                                                  neighbors_all, scores_all):
             neighbors_scores = zip(neighbors, scores)
-            neighbors_scores = [(n, s) for n, s in neighbors_scores if n != id_ and n != -1]
-            neighbors_scores = [neighbor_dict(n, s) for n, s in neighbors_scores]
+            neighbors_scores = [(n, s) for n, s in neighbors_scores
+                                if n != id_ and n != -1]
+            neighbors_scores = [neighbor_dict(n, s)
+                                for n, s in neighbors_scores]
 
             results.append(result_dict(id_, vector, neighbors_scores))
 

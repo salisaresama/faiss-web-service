@@ -35,3 +35,50 @@ Another solution would be to create a new docker image [from `plippe/faiss-web-s
 
 ### Production
 The application runs with Flask's build in server. Flask's documentation clearly states [it is not suitable for production](http://flask.pocoo.org/docs/1.1.x/deploying/).
+
+
+### Run from Python
+
+```python
+import requests
+import json
+
+# Check functionality
+result = requests.get('http://localhost:5000/ping')
+print(result.content)
+print('=' * 50)
+
+# Check the NN search of existing vectors
+result = requests.post('http://localhost:5000/faiss/search', 
+                       json={"k": 5, "ids": [15795]})
+content = json.loads(result.content)[0]
+for data in content['neighbors']:
+    print(data['id'], data['score'])
+print('=' * 50)
+     
+# Check the NN search for a query vector (query is a list of lists)
+result = requests.post('http://localhost:5000/faiss/search', 
+                       json={"k": 6, "vectors": query})
+content = json.loads(result.content)[0]
+for data in content['neighbors']:
+    print(data['id'], data['score'])
+```
+
+```
+b'pong'
+==================================================
+31068 0.717127799987793
+31131 0.7389295101165771
+94802 0.7552334070205688
+12955 0.7998499274253845
+42838 0.8059492707252502
+==================================================
+15795 0.19295963644981384
+31068 0.717127799987793
+31131 0.7389295101165771
+94802 0.7552334070205688
+12955 0.7998499274253845
+42838 0.8059492707252502
+```
+
+For now, this only works with a pre-trained index and vectors pickle in the *resources* folder.
